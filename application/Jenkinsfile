@@ -1,51 +1,28 @@
-// This job runs on the Jenkins agent. An AWS login on your laptop is not used here.
 pipeline {
     agent any
 
-    options {
-        timeout(time: 30, unit: 'MINUTES')
-        disableConcurrentBuilds()
-    }
-
     environment {
-        AWS_REGION = 'ap-south-1'
-        ECR_REGISTRY = '397745287775.dkr.ecr.ap-south-1.amazonaws.com'
-        ECR_REPO = 'merchant_devops/northline'
         IMAGE = '397745287775.dkr.ecr.ap-south-1.amazonaws.com/merchant_devops/northline'
     }
 
     stages {
-        stage('Checkout') {
+        stage('Clone') {
             steps {
-                checkout scm
-            }
-        }
-
-        stage('ECR login') {
-            steps {
-                sh '''
-                    aws ecr get-login-password --region "$AWS_REGION" \
-                      | docker login --username AWS --password-stdin "$ECR_REGISTRY"
-                '''
+                git branch: 'main', url: 'https://github.com/suryakant1811/ARGO-PRODUCTION.git'
             }
         }
 
         stage('Build') {
             steps {
-                sh 'docker build -f ARGO-PRODUCTION/application/dockerfile -t $IMAGE:$BUILD_NUMBER ARGO-PRODUCTION/application'
+                sh 'docker build -f application/dockerfile -t $IMAGE:$BUILD_NUMBER application'
             }
         }
 
         stage('Push') {
             steps {
+                sh 'aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin 397745287775.dkr.ecr.ap-south-1.amazonaws.com'
                 sh 'docker push $IMAGE:$BUILD_NUMBER'
             }
-        }
-    }
-
-    post {
-        success {
-            echo "Pushed ${env.IMAGE}:${env.BUILD_NUMBER}"
         }
     }
 }
