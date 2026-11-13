@@ -1,4 +1,4 @@
-"use strict";
+import "../config.js";
 
 const config = window.__NORTHLINE__ || { shopName: "Northline", apiBase: "" };
 const CART_KEY = "northline-cart";
