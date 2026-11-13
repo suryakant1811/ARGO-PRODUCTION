@@ -1,0 +1,30 @@
+---
+- name: nginx-playbook
+  hosts: worker
+  become: yes
+
+  tasks:
+    - name: Update the package manager
+      ansible.builtin.dnf:
+        update_cache: yes
+
+    - name: Install nginx
+      ansible.builtin.dnf:
+        name: nginx
+        state: present
+
+    - name: Start and enable nginx
+      ansible.builtin.systemd:
+        name: nginx
+        enabled: yes
+        state: started
+
+    - name: Verify nginx
+      ansible.builtin.command:
+        cmd: systemctl is-active nginx
+      register: result
+      changed_when: false
+
+    - name: Print the result
+      ansible.builtin.debug:
+        msg: "{{ result.stdout }}"
